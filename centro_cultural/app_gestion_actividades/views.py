@@ -1,18 +1,19 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 import json
 from .models import Sala, Usuario,Monitor,Actividad,Inscripcion,ResponsableSala
 
+from .forms import ActividadForm, UsuarioForm, MonitorForm, SalaForm, InscripcionForm
 
 
-#------------- ACTIVIDADES ---------------
 
+#------------- Actividades ---------------
 def lista_actividades(request):
 
     actividades = Actividad.objects.all()
 
-    # FILTROS
+    # filtros
     tipo = request.GET.get('tipo')
     monitor = request.GET.get('monitor')
 
@@ -22,426 +23,330 @@ def lista_actividades(request):
     if monitor:
         actividades = actividades.filter(monitor_id=monitor)
 
-    data = []
-
-    for actividad in actividades:
-        data.append({
-            'id': actividad.id,
-            'nombre': actividad.nombre,
-            'tipo': actividad.tipo,
-            'horario': actividad.horario,
-            'descripcion': actividad.descripcion,
-            'duracion': actividad.duracion,
-            'plazas_disponibles': actividad.plazas_disponibles,
-            'monitor': actividad.monitor.nombre,
-            'sala_principal': actividad.sala_principal.nombre
-        })
-
-    return JsonResponse(data, safe=False)
-
-
-@csrf_exempt
-def nueva_actividad(request):
-
-    if request.method == 'POST':
-
-        body = json.loads(request.body)
-
-        actividad = Actividad.objects.create(
-            nombre=body['nombre'],
-            tipo=body['tipo'],
-            horario=body['horario'],
-            descripcion=body['descripcion'],
-            duracion=body['duracion'],
-            plazas_disponibles=body['plazas_disponibles'],
-            monitor_id=body['monitor_id'],
-            sala_principal_id=body['sala_principal_id']
-        )
-
-        return JsonResponse({
-            'mensaje': 'Actividad creada',
-            'id': actividad.id
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
-
+    return render(request, 'lista.html', {
+        'titulo': 'Actividades',
+        'items': actividades,
+        'crear_url': '/actividades/nueva/',
+        'detalle_url': '/actividades/',
+        'editar_url': '/actividades/',
+        'eliminar_url': '/actividades/'
+    })
 
 def detalle_actividad(request, id):
 
     actividad = get_object_or_404(Actividad, id=id)
 
-    data = {
-        'id': actividad.id,
-        'nombre': actividad.nombre,
-        'tipo': actividad.tipo,
-        'descripcion': actividad.descripcion,
-        'monitor': actividad.monitor.nombre
-    }
+    return render(request, 'detalle.html', {
+        'titulo': actividad.nombre,
+        'datos': {
+            'Nombre': actividad.nombre,
+            'Tipo': actividad.tipo,
+            'Descripción': actividad.descripcion,
+            'Duración': actividad.duracion,
+            'Monitor': actividad.monitor.nombre,
+            'Sala': actividad.sala_principal.nombre
+        }
+    })
 
-    return JsonResponse(data)
+def nueva_actividad(request):
 
+    if request.method == 'POST':
+        form = ActividadForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/actividades/')
 
-@csrf_exempt
+    else:
+        form = ActividadForm()
+
+    return render(request, 'form.html', {
+        'titulo': 'Nueva Actividad',
+        'form': form
+    })
+
 def editar_actividad(request, id):
 
     actividad = get_object_or_404(Actividad, id=id)
 
-    if request.method == 'PUT':
+    if request.method == 'POST':
+        form = ActividadForm(request.POST, instance=actividad)
+        if form.is_valid():
+            form.save()
+            return redirect('/actividades/')
 
-        body = json.loads(request.body)
+    else:
+        form = ActividadForm(instance=actividad)
 
-        actividad.nombre = body['nombre']
-        actividad.tipo = body['tipo']
-        actividad.descripcion = body['descripcion']
+    return render(request, 'form.html', {
+        'titulo': 'Editar Actividad',
+        'form': form
+    })
 
-        actividad.save()
-
-        return JsonResponse({
-            'mensaje': 'Actividad actualizada'
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
-
-
-@csrf_exempt
 def eliminar_actividad(request, id):
 
     actividad = get_object_or_404(Actividad, id=id)
 
-    if request.method == 'DELETE':
-
+    if request.method == 'POST':
         actividad.delete()
+        return redirect('/actividades/')
 
-        return JsonResponse({
-            'mensaje': 'Actividad eliminada'
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
-
-# -------------- USUARIOS --------------
+    return render(request, 'eliminar.html', {
+        'titulo': 'Eliminar Actividad',
+        'item': actividad
+    })
 
 
+
+# -------------- Usuarios --------------
 def lista_usuarios(request):
-
-    usuarios = Usuario.objects.all()
 
     actividad = request.GET.get('actividad')
 
+    usuarios = Usuario.objects.all()
+
     if actividad:
-        usuarios = usuarios.filter(
-            actividades__id=actividad
-        )
+        usuarios = usuarios.filter(actividades__id=actividad)
 
-    data = list(usuarios.values())
-
-    return JsonResponse(data, safe=False)
-
-
-@csrf_exempt
-def nuevo_usuario(request):
-
-    if request.method == 'POST':
-
-        body = json.loads(request.body)
-
-        usuario = Usuario.objects.create(
-            nombre=body['nombre'],
-            edad=body['edad'],
-            email=body['email'],
-            telefono=body['telefono']
-        )
-
-        return JsonResponse({
-            'mensaje': 'Usuario creado',
-            'id': usuario.id
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
-
+    return render(request, 'lista.html', {
+        'titulo': 'Usuarios',
+        'items': usuarios,
+        'crear_url': '/usuarios/nuevo/',
+        'detalle_url': '/usuarios/',
+        'editar_url': '/usuarios/',
+        'eliminar_url': '/usuarios/'
+    })
 
 def detalle_usuario(request, id):
 
     usuario = get_object_or_404(Usuario, id=id)
 
-    return JsonResponse({
-        'id': usuario.id,
-        'nombre': usuario.nombre,
-        'edad': usuario.edad,
-        'email': usuario.email
+    return render(request, 'detalle.html', {
+        'titulo': usuario.nombre,
+        'datos': {
+            'Nombre': usuario.nombre,
+            'Edad': usuario.edad,
+            'Email': usuario.email,
+            'Teléfono': usuario.telefono
+        }
     })
 
+def nuevo_usuario(request):
 
-@csrf_exempt
+    if request.method == 'POST':
+        form = UsuarioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/usuarios/')
+    else:
+        form = UsuarioForm()
+
+    return render(request, 'form.html', {
+        'titulo': 'Nuevo Usuario',
+        'form': form
+    })
+
 def editar_usuario(request, id):
 
     usuario = get_object_or_404(Usuario, id=id)
 
-    if request.method == 'PUT':
+    if request.method == 'POST':
+        form = UsuarioForm(request.POST, instance=usuario)
+        if form.is_valid():
+            form.save()
+            return redirect('/usuarios/')
+    else:
+        form = UsuarioForm(instance=usuario)
 
-        body = json.loads(request.body)
+    return render(request, 'form.html', {
+        'titulo': 'Editar Usuario',
+        'form': form
+    })
 
-        usuario.nombre = body['nombre']
-        usuario.edad = body['edad']
-        usuario.email = body['email']
-        usuario.telefono = body['telefono']
-
-        usuario.save()
-
-        return JsonResponse({
-            'mensaje': 'Usuario actualizado'
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
-
-
-@csrf_exempt
 def eliminar_usuario(request, id):
 
     usuario = get_object_or_404(Usuario, id=id)
 
-    if request.method == 'DELETE':
-
+    if request.method == 'POST':
         usuario.delete()
+        return redirect('/usuarios/')
 
-        return JsonResponse({
-            'mensaje': 'Usuario eliminado'
-        })
+    return render(request, 'delete.html', {
+        'titulo': 'Eliminar Usuario',
+        'item': usuario
+    })
 
-    return JsonResponse({'error': 'Método no permitido'})
-
-
-
-# -------------- MONITORES --------------
-
+# -------------- Monitores --------------
 
 def lista_monitores(request):
 
-    data = []
-
-    for monitor in Monitor.objects.all():
-        data.append({
-            'id': monitor.id,
-            'nombre': monitor.nombre,
-            'especializacion': monitor.especializacion,
-            'numero_actividades_asignadas':
-                monitor.numero_actividades_asignadas
-        })
-
-    return JsonResponse(data, safe=False)
-
-
-@csrf_exempt
-def nuevo_monitor(request):
-
-    if request.method == 'POST':
-
-        body = json.loads(request.body)
-
-        monitor = Monitor.objects.create(
-            nombre=body['nombre'],
-            especializacion=body['especializacion']
-        )
-
-        return JsonResponse({
-            'mensaje': 'Monitor creado',
-            'id': monitor.id
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
-
-
+    return render(request, 'lista.html', {
+        'titulo': 'Monitores',
+        'items': Monitor.objects.all(),
+        'crear_url': '/monitores/nuevo/',
+        'detalle_url': '/monitores/',
+        'editar_url': '/monitores/',
+        'eliminar_url': '/monitores/'
+    })
 def detalle_monitor(request, id):
 
     monitor = get_object_or_404(Monitor, id=id)
 
-    return JsonResponse({
-        'id': monitor.id,
-        'nombre': monitor.nombre,
-        'especializacion': monitor.especializacion
+    return render(request, 'detalle.html', {
+        'titulo': monitor.nombre,
+        'datos': {
+            'Nombre': monitor.nombre,
+            'Especialización': monitor.especializacion,
+            'Actividades asignadas': monitor.numero_actividades_asignadas
+        }
+    })
+def nuevo_monitor(request):
+
+    if request.method == 'POST':
+        form = MonitorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/monitores/')
+    else:
+        form = MonitorForm()
+
+    return render(request, 'form.html', {
+        'titulo': 'Nuevo Monitor',
+        'form': form
     })
 
-
-@csrf_exempt
 def editar_monitor(request, id):
 
     monitor = get_object_or_404(Monitor, id=id)
 
-    if request.method == 'PUT':
+    if request.method == 'POST':
+        form = MonitorForm(request.POST, instance=monitor)
+        if form.is_valid():
+            form.save()
+            return redirect('/monitores/')
+    else:
+        form = MonitorForm(instance=monitor)
 
-        body = json.loads(request.body)
+    return render(request, 'form.html', {
+        'titulo': 'Editar Monitor',
+        'form': form
+    })
 
-        monitor.nombre = body['nombre']
-        monitor.especializacion = body['especializacion']
-
-        monitor.save()
-
-        return JsonResponse({
-            'mensaje': 'Monitor actualizado'
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
-
-
-@csrf_exempt
 def eliminar_monitor(request, id):
 
     monitor = get_object_or_404(Monitor, id=id)
 
-    if request.method == 'DELETE':
-
+    if request.method == 'POST':
         monitor.delete()
+        return redirect('/monitores/')
 
-        return JsonResponse({
-            'mensaje': 'Monitor eliminado'
-        })
+    return render(request, 'eliminar.html', {
+        'titulo': 'Eliminar Monitor',
+        'item': monitor
+    })
 
-    return JsonResponse({'error': 'Método no permitido'})
-
-
-
-# ------------- SALAS ---------------
-
+# ------------- Salas ---------------
 
 def lista_salas(request):
 
-    data = []
-
-    for sala in Sala.objects.all():
-        data.append({
-            'id': sala.id,
-            'nombre': sala.nombre,
-            'capacidad': sala.capacidad,
-            'ubicacion': sala.ubicacion
-        })
-
-    return JsonResponse(data, safe=False)
-
-
-@csrf_exempt
-def nueva_sala(request):
-
-    if request.method == 'POST':
-
-        body = json.loads(request.body)
-
-        sala = Sala.objects.create(
-            nombre=body['nombre'],
-            capacidad=body['capacidad'],
-            ubicacion=body['ubicacion'],
-            responsable_id=body['responsable_id']
-        )
-
-        return JsonResponse({
-            'mensaje': 'Sala creada',
-            'id': sala.id
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
-
-
+    return render(request, 'lista.html', {
+        'titulo': 'Salas',
+        'items': Sala.objects.all(),
+        'crear_url': '/salas/nueva/',
+        'detalle_url': '/salas/',
+        'editar_url': '/salas/',
+        'eliminar_url': '/salas/'
+    })
 def detalle_sala(request, id):
 
     sala = get_object_or_404(Sala, id=id)
 
-    return JsonResponse({
-        'id': sala.id,
-        'nombre': sala.nombre,
-        'capacidad': sala.capacidad,
-        'ubicacion': sala.ubicacion
+    return render(request, 'detalle.html', {
+        'titulo': sala.nombre,
+        'datos': {
+            'Nombre': sala.nombre,
+            'Capacidad': sala.capacidad,
+            'Ubicación': sala.ubicacion,
+            'Responsable': sala.responsable.nombre
+        }
     })
 
+def nueva_sala(request):
 
-@csrf_exempt
+    if request.method == 'POST':
+        form = SalaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/salas/')
+    else:
+        form = SalaForm()
+
+    return render(request, 'form.html', {
+        'titulo': 'Nueva Sala',
+        'form': form
+    })
+
 def editar_sala(request, id):
 
     sala = get_object_or_404(Sala, id=id)
 
-    if request.method == 'PUT':
+    if request.method == 'POST':
+        form = SalaForm(request.POST, instance=sala)
+        if form.is_valid():
+            form.save()
+            return redirect('/salas/')
+    else:
+        form = SalaForm(instance=sala)
 
-        body = json.loads(request.body)
+    return render(request, 'form.html', {
+        'titulo': 'Editar Sala',
+        'form': form
+    })
 
-        sala.nombre = body['nombre']
-        sala.capacidad = body['capacidad']
-        sala.ubicacion = body['ubicacion']
-
-        sala.save()
-
-        return JsonResponse({
-            'mensaje': 'Sala actualizada'
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
-
-
-@csrf_exempt
 def eliminar_sala(request, id):
 
     sala = get_object_or_404(Sala, id=id)
 
-    if request.method == 'DELETE':
-
+    if request.method == 'POST':
         sala.delete()
+        return redirect('/salas/')
 
-        return JsonResponse({
-            'mensaje': 'Sala eliminada'
-        })
+    return render(request, 'eliminar.html', {
+        'titulo': 'Eliminar Sala',
+        'item': sala
+    })
 
-    return JsonResponse({'error': 'Método no permitido'})
-
-
-
-# ------------- INSCRIPCIONES ---------------
-
+# ------------- Inscripciones ---------------
 
 def listar_inscripciones(request, id):
 
     actividad = get_object_or_404(Actividad, id=id)
 
-    data = []
+    inscripciones = Inscripcion.objects.filter(actividad=actividad)
 
-    for inscripcion in Inscripcion.objects.filter(
-        actividad=actividad
-    ):
-
-        data.append({
-            'usuario_id': inscripcion.usuario.id,
-            'usuario': inscripcion.usuario.nombre,
-            'fecha_inscripcion':
-                inscripcion.fecha_inscripcion,
-            'asistencia':
-                inscripcion.asistencia
-        })
-
-    return JsonResponse(data, safe=False)
-
-
-@csrf_exempt
+    return render(request, 'inscripciones/lista.html', {
+        'actividad': actividad,
+        'inscripciones': inscripciones
+    })
 def inscribir_usuario(request, id):
 
     actividad = get_object_or_404(Actividad, id=id)
 
     if request.method == 'POST':
+        form = InscripcionForm(request.POST)
+        if form.is_valid():
+            inscripcion = form.save(commit=False)
+            inscripcion.actividad = actividad
+            inscripcion.save()
+            return redirect(f'/actividades/{id}/inscripciones/')
+    else:
+        form = InscripcionForm()
 
-        body = json.loads(request.body)
+    return render(request, 'inscripciones/form.html', {
+        'titulo': 'Inscribir Usuario',
+        'form': form,
+        'actividad': actividad
+    })
 
-        usuario = Usuario.objects.get(
-            id=body['usuario_id']
-        )
-
-        inscripcion = Inscripcion.objects.create(
-            usuario=usuario,
-            actividad=actividad
-        )
-
-        return JsonResponse({
-            'mensaje': 'Usuario inscrito',
-            'inscripcion_id': inscripcion.id
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
-
-
-@csrf_exempt
 def cancelar_inscripcion(request, id, usuario_id):
 
     actividad = get_object_or_404(Actividad, id=id)
@@ -452,12 +357,11 @@ def cancelar_inscripcion(request, id, usuario_id):
         usuario_id=usuario_id
     )
 
-    if request.method == 'DELETE':
-
+    if request.method == 'POST':
         inscripcion.delete()
+        return redirect(f'/actividades/{id}/inscripciones/')
 
-        return JsonResponse({
-            'mensaje': 'Inscripción cancelada'
-        })
-
-    return JsonResponse({'error': 'Método no permitido'})
+    return render(request, 'eliminar.html', {
+        'titulo': 'Cancelar Inscripción',
+        'item': inscripcion
+    })
