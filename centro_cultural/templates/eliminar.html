@@ -1,0 +1,15 @@
+{% extends 'principal.html' %}
+
+{% block content %}
+
+<h2>¿Eliminar elemento?</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <button type="submit">
+        Confirmar eliminación
+    </button>
+</form>
+
+{% endblock %}

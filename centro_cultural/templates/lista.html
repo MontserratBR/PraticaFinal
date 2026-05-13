@@ -1,0 +1,33 @@
+{% extends 'principal.html' %}
+
+{% block content %}
+
+<h2>{{ titulo }}</h2>
+
+{% if crear_url %}
+    <a href="{{ crear_url }}">Crear nuevo</a>
+{% endif %}
+
+<ul>
+    {% for item in items %}
+        <li>
+
+            {{ item.nombre }}
+
+            {% if detalle_url %}
+                <a href="{{ detalle_url }}{{ item.id }}/">Ver</a>
+            {% endif %}
+
+            {% if editar_url %}
+                <a href="{{ editar_url }}{{ item.id }}/editar/">Editar</a>
+            {% endif %}
+
+            {% if eliminar_url %}
+                <a href="{{ eliminar_url }}{{ item.id }}/eliminar/">Eliminar</a>
+            {% endif %}
+
+        </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}
