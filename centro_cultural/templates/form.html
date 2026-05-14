@@ -1,46 +1,39 @@
 {% extends 'principal.html' %}
 
 {% block content %}
+<div class="container mt-4">
+    <p class="h2 text-center">{{ titulo }}</p>
+    <hr>
 
-{% if form.non_field_errors %}
-    <div class="alert alert-danger">
-        {{ form.non_field_errors }}
-    </div>
-{% endif %}
+    <form method="post" class="form-group">
+        {% csrf_token %}
 
-<form method="post">
-    {% csrf_token %}
-
-    {% for field in form %}
-
-        <div class="mb-3">
-
-            <label class="form-label">
-                {{ field.label }}
-            </label>
-
-            {{ field }}
-
-            {% if field.help_text %}
-                <div class="form-text">
-                    {{ field.help_text }}
+        {% if form %}
+            <!-- Renderizado de campos si existe un formulario de Django -->
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors }}</div>
+                    {% endif %}
                 </div>
-            {% endif %}
+            {% endfor %}
+        {% else %}
+            <!-- Mensaje de confirmación si es una acción directa (como inscribirse) -->
+            <div class="alert alert-info">
+                ¿Estás seguro de que deseas realizar esta acción para <strong>{{ actividad.nombre }}</strong>?
+            </div>
+        {% endif %}
 
-            {% if field.errors %}
-                <div class="text-danger">
-                    {{ field.errors }}
-                </div>
-            {% endif %}
-
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-success">
+                {% if "Eliminar" in titulo or "Cancelar" in titulo %} Confirmar Baja {% else %} Guardar {% endif %}
+            </button>
+            <a href="javascript:history.back()" class="btn btn-secondary">Volver</a>
         </div>
-
-    {% endfor %}
-
-    <button type="submit" class="btn btn-success">
-        Guardar
-    </button>
-
-</form>
-
+    </form>
+</div>
 {% endblock %}

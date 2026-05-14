@@ -20,8 +20,6 @@ class ResponsableSalaForm(forms.ModelForm):
         model = ResponsableSala
         fields = '__all__'
 
-
-
 class SalaForm(forms.ModelForm):
 
     class Meta:
@@ -31,7 +29,16 @@ class SalaForm(forms.ModelForm):
 class ActividadForm(forms.ModelForm):
     class Meta:
         model = Actividad
-        fields = '__all__'
+        fields = [
+            'nombre',
+            'tipo',
+            'horario',
+            'descripcion',
+            'duracion',
+            'plazas_disponibles',
+            'monitor',
+            'sala_principal'
+        ]
         widgets = {
             'horario': forms.DateTimeInput(
                 attrs={'type': 'datetime-local'}
@@ -41,11 +48,10 @@ class ActividadForm(forms.ModelForm):
                 attrs={'rows': 4}
             ),
 
-            'salas_secundarias': forms.CheckboxSelectMultiple()
         }
 
 class InscripcionForm(forms.ModelForm):
 
     class Meta:
         model = Inscripcion
-        fields = '__all__'
+        fields = ['usuario']

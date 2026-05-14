@@ -15,7 +15,13 @@
   <tbody>
     {% for item in items %}
     <tr>
-      <td>{{ item.nombre }}
+      <td>
+        {% if tipo == "inscripciones" %}
+        {{ item.usuario.nombre }} 
+        {% else %}
+        {{ item.nombre }}
+         {% endif %}
+        {{ item.nombre }}
         {% if detalle_url %}
                 <a href="{{ detalle_url }}{{ item.id }}/" class="btn btn-success">Ver🔍</a>
             {% endif %}
@@ -27,6 +33,17 @@
             {% if eliminar_url %}
                 <a href="{{ eliminar_url }}{{ item.id }}/eliminar/" class="btn btn-danger">Eliminar🗑️</a>
             {% endif %}
+
+        {% if tipo == "actividades" %}
+        <a href="{% url 'listar_inscripciones' item.id %}" class="btn btn-outline-success btn-sm">Ver inscritos</a>
+        <a href="{% url 'inscribir_usuario' item.id %}" class="btn btn-outline-info btn-sm">Inscribirme</a>
+    {% endif %}
+
+    {% if tipo == "inscripciones" %}
+        <a href="{% url 'cancelar_inscripcion' actividad.id item.id %}" class="btn btn-danger btn-sm">
+            Cancelar Inscripción
+        </a>
+    {% endif %}
       </td>
 
     </tr>
@@ -34,25 +51,5 @@
   </tbody>
 </table>
 <ul>
-   <!-- {% for item in items %}
-        <li>
-
-            {{ item.nombre }}
-
-            {% if detalle_url %}
-                <a href="{{ detalle_url }}{{ item.id }}/" class="btn btn-success">Ver🔍</a>
-            {% endif %}
-
-            {% if editar_url %}
-                <a href="{{ editar_url }}{{ item.id }}/editar/" class="btn btn-warning">Editar✏️</a>
-            {% endif %}
-
-            {% if eliminar_url %}
-                <a href="{{ eliminar_url }}{{ item.id }}/eliminar/" class="btn btn-danger">Eliminar🗑️</a>
-            {% endif %}
-
-        </li>
-    {% endfor %}
-</ul>-->
 
 {% endblock %}

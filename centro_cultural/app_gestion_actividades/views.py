@@ -29,7 +29,8 @@ def lista_actividades(request):
         'crear_url': '/actividades/nueva/',
         'detalle_url': '/actividades/',
         'editar_url': '/actividades/',
-        'eliminar_url': '/actividades/'
+        'eliminar_url': '/actividades/',
+        "tipo": "actividades"
     })
 
 def detalle_actividad(request, id):
@@ -389,48 +390,50 @@ def eliminar_responsable(request, id):
 # ------------- Inscripciones ---------------
 
 def listar_inscripciones(request, id):
-
     actividad = get_object_or_404(Actividad, id=id)
-
     inscripciones = Inscripcion.objects.filter(actividad=actividad)
 
-    return render(request, 'inscripciones/lista.html', {
-        'actividad': actividad,
-        'inscripciones': inscripciones
+    return render(request, 'lista.html', { 
+        'titulo': f'Inscritos en {actividad.nombre}',
+        'items': inscripciones,  
+        'tipo': 'inscripciones', 
+        'actividad': actividad,  
+        
     })
+
 def inscribir_usuario(request, id):
-
     actividad = get_object_or_404(Actividad, id=id)
-
+    
     if request.method == 'POST':
         form = InscripcionForm(request.POST)
         if form.is_valid():
             inscripcion = form.save(commit=False)
             inscripcion.actividad = actividad
             inscripcion.save()
-            return redirect(f'/actividades/{id}/inscripciones/')
+            return redirect('listar_inscripciones', id=actividad.id)
     else:
         form = InscripcionForm()
 
-    return render(request, 'inscripciones/form.html', {
-        'titulo': 'Inscribir Usuario',
+    return render(request, 'form.html', {
+        'titulo': f'Inscribir en {actividad.nombre}',
         'form': form,
         'actividad': actividad
     })
+    
 
-def cancelar_inscripcion(request, id, usuario_id):
+def cancelar_inscripcion(request, id, inscripcion_id):
 
     actividad = get_object_or_404(Actividad, id=id)
 
     inscripcion = get_object_or_404(
         Inscripcion,
-        actividad=actividad,
-        usuario_id=usuario_id
+        id=inscripcion_id,
+        actividad=actividad
     )
 
     if request.method == 'POST':
         inscripcion.delete()
-        return redirect(f'/actividades/{id}/inscripciones/')
+        return redirect('listar_inscripciones', id=actividad.id)
 
     return render(request, 'eliminar.html', {
         'titulo': 'Cancelar Inscripción',

@@ -38,7 +38,8 @@ urlpatterns = [
     path('responsables/<int:id>/eliminar/',views.eliminar_responsable),
 
     #-------------- Inscripciones --------------
-    path('actividades/<int:id>/inscripciones/',views.listar_inscripciones),
-    path('actividades/<int:id>/inscribir/',views.inscribir_usuario),
-    path('actividades/<int:id>/inscripciones/<int:usuario_id>/eliminar/',views.cancelar_inscripcion),
+    path('actividades/<int:id>/inscripciones/',views.listar_inscripciones, name='listar_inscripciones'),
+    path('actividades/<int:id>/inscribir/',views.inscribir_usuario, name='inscribir_usuario'),
+    path('actividades/<int:id>/inscripciones/<int:inscripcion_id>/eliminar/',views.cancelar_inscripcion,name='cancelar_inscripcion')
+
 ]
