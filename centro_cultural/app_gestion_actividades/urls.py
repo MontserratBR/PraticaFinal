@@ -29,7 +29,14 @@ urlpatterns = [
     path('salas/<int:id>/',views.detalle_sala),
     path('salas/<int:id>/editar/',views.editar_sala),
     path('salas/<int:id>/eliminar/',views.eliminar_sala),
-   
+    
+    #-------------- Responsables de sala --------------
+    path('responsables/',views.lista_responsables),
+    path('responsables/nuevo/',views.nuevo_responsable),
+    path('responsables/<int:id>/',views.detalle_responsable),
+    path('responsables/<int:id>/editar/',views.editar_responsable),
+    path('responsables/<int:id>/eliminar/',views.eliminar_responsable),
+
     #-------------- Inscripciones --------------
     path('actividades/<int:id>/inscripciones/',views.listar_inscripciones),
     path('actividades/<int:id>/inscribir/',views.inscribir_usuario),

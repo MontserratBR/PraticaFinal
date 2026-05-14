@@ -20,6 +20,8 @@ class ResponsableSalaForm(forms.ModelForm):
         model = ResponsableSala
         fields = '__all__'
 
+
+
 class SalaForm(forms.ModelForm):
 
     class Meta:

@@ -1,15 +1,17 @@
 {% extends 'principal.html' %}
 
 {% block content %}
-
-<h2>¿Eliminar elemento?</h2>
-
-<form method="post">
-    {% csrf_token %}
-
-    <button type="submit">
-        Confirmar eliminación
-    </button>
-</form>
-
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow-sm p-4 text-center" style="max-width: 300px;">
+        <h5 class="mb-3">¿Desea eliminar este elemento?</h5>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-danger">Confirmar</button>
+                <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-light">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

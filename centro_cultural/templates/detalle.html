@@ -2,14 +2,27 @@
 
 {% block content %}
 
-<h2>{{ titulo }}</h2>
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">{{ titulo }}</h2>
 
-<ul>
-    {% for campo, valor in datos.items %}
-        <li>
-            <strong>{{ campo }}</strong>: {{ valor }}
-        </li>
-    {% endfor %}
-</ul>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    {% for campo in datos.keys %}
+                        <th class="text-capitalize">{{ campo }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    {% for valor in datos.values %}
+                        <td>{{ valor }}</td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 {% endblock %}

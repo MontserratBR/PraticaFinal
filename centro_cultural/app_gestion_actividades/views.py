@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 import json
 from .models import Sala, Usuario,Monitor,Actividad,Inscripcion,ResponsableSala
 
-from .forms import ActividadForm, UsuarioForm, MonitorForm, SalaForm, InscripcionForm
+from .forms import ActividadForm, UsuarioForm, MonitorForm, SalaForm, InscripcionForm, ResponsableSalaForm
 
 
 
@@ -170,7 +170,7 @@ def eliminar_usuario(request, id):
         usuario.delete()
         return redirect('/usuarios/')
 
-    return render(request, 'delete.html', {
+    return render(request, 'eliminar.html', {
         'titulo': 'Eliminar Usuario',
         'item': usuario
     })
@@ -313,6 +313,77 @@ def eliminar_sala(request, id):
     return render(request, 'eliminar.html', {
         'titulo': 'Eliminar Sala',
         'item': sala
+    })
+# ------------- Responsables de sala ---------------
+def lista_responsables(request):
+
+    responsables = ResponsableSala.objects.all()
+
+    return render(request, 'lista.html', {
+        'titulo': 'Responsables de Sala',
+        'items': responsables,
+        'crear_url': '/responsables/nuevo/',
+        'detalle_url': '/responsables/',
+        'editar_url': '/responsables/',
+        'eliminar_url': '/responsables/'
+    })
+
+def nuevo_responsable(request):
+
+    if request.method == 'POST':
+        form = ResponsableSalaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/responsables/')
+    else:
+        form = ResponsableSalaForm()
+
+    return render(request, 'form.html', {
+        'titulo': 'Nuevo Responsable de Sala',
+        'form': form
+    })
+
+def detalle_responsable(request, id):
+
+    responsable = get_object_or_404(ResponsableSala, id=id)
+
+    return render(request, 'detalle.html', {
+        'titulo': responsable.nombre,
+        'datos': {
+            'Nombre': responsable.nombre,
+            'Teléfono': responsable.telefono,
+            'Email': responsable.email
+        }
+    })
+
+def editar_responsable(request, id):
+
+    responsable = get_object_or_404(ResponsableSala, id=id)
+
+    if request.method == 'POST':
+        form = ResponsableSalaForm(request.POST, instance=responsable)
+        if form.is_valid():
+            form.save()
+            return redirect('/responsables/')
+    else:
+        form = ResponsableSalaForm(instance=responsable)
+
+    return render(request, 'form.html', {
+        'titulo': 'Editar Responsable de Sala',
+        'form': form
+    })
+
+def eliminar_responsable(request, id):
+
+    responsable = get_object_or_404(ResponsableSala, id=id)
+
+    if request.method == 'POST':
+        responsable.delete()
+        return redirect('/responsables/')
+
+    return render(request, 'eliminar.html', {
+        'titulo': 'Eliminar Responsable',
+        'item': responsable
     })
 
 # ------------- Inscripciones ---------------
