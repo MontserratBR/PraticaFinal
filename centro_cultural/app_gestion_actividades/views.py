@@ -3,26 +3,20 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, redirect, render
 import json
 from .models import Sala, Usuario,Monitor,Actividad,Inscripcion,ResponsableSala
-
 from .forms import ActividadForm, UsuarioForm, MonitorForm, SalaForm, InscripcionForm, ResponsableSalaForm
-
-
 
 #------------- Actividades ---------------
 def lista_actividades(request):
-
-    actividades = Actividad.objects.all()
-
-    # filtros
+    actividades = Actividad.objects.all().select_related('monitor')
+    tipos_disponibles = Actividad.objects.values_list('tipo', flat=True).distinct()
+    monitores_disponibles = Monitor.objects.all()
     tipo = request.GET.get('tipo')
     monitor = request.GET.get('monitor')
-
     if tipo:
         actividades = actividades.filter(tipo=tipo)
-
     if monitor:
         actividades = actividades.filter(monitor_id=monitor)
-
+    
     return render(request, 'lista.html', {
         'titulo': 'Actividades',
         'items': actividades,
@@ -30,11 +24,12 @@ def lista_actividades(request):
         'detalle_url': '/actividades/',
         'editar_url': '/actividades/',
         'eliminar_url': '/actividades/',
-        "tipo": "actividades"
+        'tipo': 'actividades',  
+        'tipos_disponibles': tipos_disponibles,       
+        'monitores_disponibles': monitores_disponibles
     })
 
 def detalle_actividad(request, id):
-
     actividad = get_object_or_404(Actividad, id=id)
 
     return render(request, 'detalle.html', {
@@ -50,16 +45,13 @@ def detalle_actividad(request, id):
     })
 
 def nueva_actividad(request):
-
     if request.method == 'POST':
         form = ActividadForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect('/actividades/')
-
     else:
         form = ActividadForm()
-
     return render(request, 'form.html', {
         'titulo': 'Nueva Actividad',
         'form': form
@@ -68,59 +60,47 @@ def nueva_actividad(request):
 def editar_actividad(request, id):
 
     actividad = get_object_or_404(Actividad, id=id)
-
     if request.method == 'POST':
         form = ActividadForm(request.POST, instance=actividad)
         if form.is_valid():
             form.save()
             return redirect('/actividades/')
-
     else:
         form = ActividadForm(instance=actividad)
-
     return render(request, 'form.html', {
         'titulo': 'Editar Actividad',
         'form': form
     })
 
 def eliminar_actividad(request, id):
-
     actividad = get_object_or_404(Actividad, id=id)
-
     if request.method == 'POST':
         actividad.delete()
         return redirect('/actividades/')
-
     return render(request, 'eliminar.html', {
         'titulo': 'Eliminar Actividad',
         'item': actividad
     })
 
-
-
 # -------------- Usuarios --------------
 def lista_usuarios(request):
-
     actividad = request.GET.get('actividad')
-
     usuarios = Usuario.objects.all()
-
+    actividades_disponibles = Actividad.objects.all()
     if actividad:
         usuarios = usuarios.filter(actividades__id=actividad)
-
     return render(request, 'lista.html', {
         'titulo': 'Usuarios',
         'items': usuarios,
         'crear_url': '/usuarios/nuevo/',
         'detalle_url': '/usuarios/',
         'editar_url': '/usuarios/',
-        'eliminar_url': '/usuarios/'
+        'eliminar_url': '/usuarios/',
+        'actividades_disponibles': actividades_disponibles
     })
 
 def detalle_usuario(request, id):
-
     usuario = get_object_or_404(Usuario, id=id)
-
     return render(request, 'detalle.html', {
         'titulo': usuario.nombre,
         'datos': {
@@ -132,7 +112,6 @@ def detalle_usuario(request, id):
     })
 
 def nuevo_usuario(request):
-
     if request.method == 'POST':
         form = UsuarioForm(request.POST)
         if form.is_valid():
@@ -140,16 +119,13 @@ def nuevo_usuario(request):
             return redirect('/usuarios/')
     else:
         form = UsuarioForm()
-
     return render(request, 'form.html', {
         'titulo': 'Nuevo Usuario',
         'form': form
     })
 
 def editar_usuario(request, id):
-
     usuario = get_object_or_404(Usuario, id=id)
-
     if request.method == 'POST':
         form = UsuarioForm(request.POST, instance=usuario)
         if form.is_valid():
@@ -157,20 +133,16 @@ def editar_usuario(request, id):
             return redirect('/usuarios/')
     else:
         form = UsuarioForm(instance=usuario)
-
     return render(request, 'form.html', {
         'titulo': 'Editar Usuario',
         'form': form
     })
 
 def eliminar_usuario(request, id):
-
     usuario = get_object_or_404(Usuario, id=id)
-
     if request.method == 'POST':
         usuario.delete()
         return redirect('/usuarios/')
-
     return render(request, 'eliminar.html', {
         'titulo': 'Eliminar Usuario',
         'item': usuario
@@ -179,7 +151,6 @@ def eliminar_usuario(request, id):
 # -------------- Monitores --------------
 
 def lista_monitores(request):
-
     return render(request, 'lista.html', {
         'titulo': 'Monitores',
         'items': Monitor.objects.all(),
@@ -188,10 +159,9 @@ def lista_monitores(request):
         'editar_url': '/monitores/',
         'eliminar_url': '/monitores/'
     })
+
 def detalle_monitor(request, id):
-
     monitor = get_object_or_404(Monitor, id=id)
-
     return render(request, 'detalle.html', {
         'titulo': monitor.nombre,
         'datos': {
@@ -200,8 +170,8 @@ def detalle_monitor(request, id):
             'Actividades asignadas': monitor.numero_actividades_asignadas
         }
     })
-def nuevo_monitor(request):
 
+def nuevo_monitor(request):
     if request.method == 'POST':
         form = MonitorForm(request.POST)
         if form.is_valid():
@@ -209,16 +179,13 @@ def nuevo_monitor(request):
             return redirect('/monitores/')
     else:
         form = MonitorForm()
-
     return render(request, 'form.html', {
         'titulo': 'Nuevo Monitor',
         'form': form
     })
 
 def editar_monitor(request, id):
-
     monitor = get_object_or_404(Monitor, id=id)
-
     if request.method == 'POST':
         form = MonitorForm(request.POST, instance=monitor)
         if form.is_valid():
@@ -233,13 +200,11 @@ def editar_monitor(request, id):
     })
 
 def eliminar_monitor(request, id):
-
     monitor = get_object_or_404(Monitor, id=id)
 
     if request.method == 'POST':
         monitor.delete()
         return redirect('/monitores/')
-
     return render(request, 'eliminar.html', {
         'titulo': 'Eliminar Monitor',
         'item': monitor
@@ -248,7 +213,6 @@ def eliminar_monitor(request, id):
 # ------------- Salas ---------------
 
 def lista_salas(request):
-
     return render(request, 'lista.html', {
         'titulo': 'Salas',
         'items': Sala.objects.all(),
@@ -257,10 +221,9 @@ def lista_salas(request):
         'editar_url': '/salas/',
         'eliminar_url': '/salas/'
     })
+
 def detalle_sala(request, id):
-
     sala = get_object_or_404(Sala, id=id)
-
     return render(request, 'detalle.html', {
         'titulo': sala.nombre,
         'datos': {
@@ -272,7 +235,6 @@ def detalle_sala(request, id):
     })
 
 def nueva_sala(request):
-
     if request.method == 'POST':
         form = SalaForm(request.POST)
         if form.is_valid():
@@ -280,16 +242,13 @@ def nueva_sala(request):
             return redirect('/salas/')
     else:
         form = SalaForm()
-
     return render(request, 'form.html', {
         'titulo': 'Nueva Sala',
         'form': form
     })
 
 def editar_sala(request, id):
-
     sala = get_object_or_404(Sala, id=id)
-
     if request.method == 'POST':
         form = SalaForm(request.POST, instance=sala)
         if form.is_valid():
@@ -297,29 +256,24 @@ def editar_sala(request, id):
             return redirect('/salas/')
     else:
         form = SalaForm(instance=sala)
-
     return render(request, 'form.html', {
         'titulo': 'Editar Sala',
         'form': form
     })
 
 def eliminar_sala(request, id):
-
     sala = get_object_or_404(Sala, id=id)
-
     if request.method == 'POST':
         sala.delete()
         return redirect('/salas/')
-
     return render(request, 'eliminar.html', {
         'titulo': 'Eliminar Sala',
         'item': sala
     })
+
 # ------------- Responsables de sala ---------------
 def lista_responsables(request):
-
     responsables = ResponsableSala.objects.all()
-
     return render(request, 'lista.html', {
         'titulo': 'Responsables de Sala',
         'items': responsables,
@@ -330,7 +284,6 @@ def lista_responsables(request):
     })
 
 def nuevo_responsable(request):
-
     if request.method == 'POST':
         form = ResponsableSalaForm(request.POST)
         if form.is_valid():
@@ -338,16 +291,13 @@ def nuevo_responsable(request):
             return redirect('/responsables/')
     else:
         form = ResponsableSalaForm()
-
     return render(request, 'form.html', {
         'titulo': 'Nuevo Responsable de Sala',
         'form': form
     })
 
 def detalle_responsable(request, id):
-
     responsable = get_object_or_404(ResponsableSala, id=id)
-
     return render(request, 'detalle.html', {
         'titulo': responsable.nombre,
         'datos': {
@@ -358,9 +308,7 @@ def detalle_responsable(request, id):
     })
 
 def editar_responsable(request, id):
-
     responsable = get_object_or_404(ResponsableSala, id=id)
-
     if request.method == 'POST':
         form = ResponsableSalaForm(request.POST, instance=responsable)
         if form.is_valid():
@@ -368,20 +316,16 @@ def editar_responsable(request, id):
             return redirect('/responsables/')
     else:
         form = ResponsableSalaForm(instance=responsable)
-
     return render(request, 'form.html', {
         'titulo': 'Editar Responsable de Sala',
         'form': form
     })
 
 def eliminar_responsable(request, id):
-
     responsable = get_object_or_404(ResponsableSala, id=id)
-
     if request.method == 'POST':
         responsable.delete()
         return redirect('/responsables/')
-
     return render(request, 'eliminar.html', {
         'titulo': 'Eliminar Responsable',
         'item': responsable
@@ -392,7 +336,6 @@ def eliminar_responsable(request, id):
 def listar_inscripciones(request, id):
     actividad = get_object_or_404(Actividad, id=id)
     inscripciones = Inscripcion.objects.filter(actividad=actividad)
-
     return render(request, 'lista.html', { 
         'titulo': f'Inscritos en {actividad.nombre}',
         'items': inscripciones,  
@@ -403,7 +346,6 @@ def listar_inscripciones(request, id):
 
 def inscribir_usuario(request, id):
     actividad = get_object_or_404(Actividad, id=id)
-    
     if request.method == 'POST':
         form = InscripcionForm(request.POST)
         if form.is_valid():
@@ -413,7 +355,6 @@ def inscribir_usuario(request, id):
             return redirect('listar_inscripciones', id=actividad.id)
     else:
         form = InscripcionForm()
-
     return render(request, 'form.html', {
         'titulo': f'Inscribir en {actividad.nombre}',
         'form': form,
@@ -422,19 +363,15 @@ def inscribir_usuario(request, id):
     
 
 def cancelar_inscripcion(request, id, inscripcion_id):
-
     actividad = get_object_or_404(Actividad, id=id)
-
     inscripcion = get_object_or_404(
         Inscripcion,
         id=inscripcion_id,
         actividad=actividad
     )
-
     if request.method == 'POST':
         inscripcion.delete()
         return redirect('listar_inscripciones', id=actividad.id)
-
     return render(request, 'eliminar.html', {
         'titulo': 'Cancelar Inscripción',
         'item': inscripcion

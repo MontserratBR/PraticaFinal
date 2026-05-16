@@ -2,55 +2,99 @@
 
 {% block content %}
 
-<p class="h2 text-center">{{ titulo }}</p>
+<p class="h2 text-center my-4">{{ titulo }}</p>
+<div class="row g-3 align-items-center mb-4">
+    <div class="col-auto">
+        {% if crear_url %}
+            <a href="{{ crear_url }}" class="btn btn-primary">Nuevo</a>
+        {% endif %}
+    </div>
+    <div class="col">
+        {% if tipo == "actividades" or titulo == "Actividades" %}
+            <form method="GET" action="/actividades/" class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <select name="tipo" class="form-select">
+                        <option value="">-- Tipos --</option>
+                        {% for t in tipos_disponibles %}
+                            <option value="{{ t }}" {% if request.GET.tipo == t %}selected{% endif %}>{{ t|capfirst }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <select name="monitor" class="form-select">
+                        <option value="">-- Monitores --</option>
+                        {% for m in monitores_disponibles %}
+                            <option value="{{ m.id }}" {% if request.GET.monitor == m.id|stringformat:"i" %}selected{% endif %}>{{ m.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-secondary">Filtrar</button>
+                    {% if request.GET.tipo or request.GET.monitor %}
+                        <a href="/actividades/" class="btn btn-link text-decoration-none text-muted">Limpiar</a>
+                    {% endif %}
+                </div>
+            </form>
+        {% endif %}
+        {% if tipo == "usuarios" or titulo == "Usuarios" %}
+            <form method="GET" action="/usuarios/" class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <select name="actividad" class="form-select">
+                        <option value="">-- Todas las actividades --</option>
+                        {% for a in actividades_disponibles %}
+                            <option value="{{ a.id }}" {% if request.GET.actividad == a.id|stringformat:"i" %}selected{% endif %}>{{ a.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-{% if crear_url %}
-<a href="{{ crear_url }}" class="btn btn-primary">Crear nuevo</a>
-<hr>    
-{% endif %}
-
-<table class="table table-striped">
-  <thead>
-  
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-secondary">Buscar</button>
+                    {% if request.GET.actividad %}
+                        <a href="/usuarios/" class="btn btn-link text-decoration-none text-muted">Limpiar</a>
+                    {% endif %}
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</div>
+<hr>
+<table class="table table-striped align-middle">
   <tbody>
     {% for item in items %}
     <tr>
-      <td class="text-center">
+      <td class="text-start ps-4">
         {% if tipo == "inscripciones" %}
-        {{ item.usuario.nombre }} 
+            {{ item.usuario.nombre }} 
         {% else %}
-        {{ item.nombre }}
-         {% endif %}
-        </td>
-        <td class="text-end">
-        {% if detalle_url %}
-                <a href="{{ detalle_url }}{{ item.id }}/" class="btn btn-success">Ver🔍</a>
-            {% endif %}
-
-            {% if editar_url %}
-                <a href="{{ editar_url }}{{ item.id }}/editar/" class="btn btn-warning">Editar✏️</a>
-            {% endif %}
-
-            {% if eliminar_url %}
-                <a href="{{ eliminar_url }}{{ item.id }}/eliminar/" class="btn btn-danger">Eliminar🗑️</a>
-            {% endif %}
-
-        {% if tipo == "actividades" %}
-        <a href="{% url 'listar_inscripciones' item.id %}" class="btn btn-outline-success btn-sm">Ver inscritos</a>
-        <a href="{% url 'inscribir_usuario' item.id %}" class="btn btn-outline-info btn-sm">Inscribirme</a>
-    {% endif %}
-
-    {% if tipo == "inscripciones" %}
-        <a href="{% url 'cancelar_inscripcion' actividad.id item.id %}" class="btn btn-danger btn-sm">
-            Cancelar Inscripción
-        </a>
-    {% endif %}
+            {{ item.nombre }}
+        {% endif %}
       </td>
-
+      <td class="text-end pe-4">
+        {% if detalle_url %}
+            <a href="{{ detalle_url }}{{ item.id }}/" class="btn btn-success btn-sm">Ver🔍</a>
+        {% endif %}
+        {% if editar_url %}
+            <a href="{{ editar_url }}{{ item.id }}/editar/" class="btn btn-warning btn-sm">Editar✏️</a>
+        {% endif %}
+        {% if eliminar_url %}
+            <a href="{{ eliminar_url }}{{ item.id }}/eliminar/" class="btn btn-danger btn-sm">Eliminar🗑️</a>
+        {% endif %}
+        {% if tipo == "actividades" %}
+            <a href="{% url 'listar_inscripciones' item.id %}" class="btn btn-outline-success btn-sm">Ver inscritos</a>
+            <a href="{% url 'inscribir_usuario' item.id %}" class="btn btn-outline-info btn-sm">Inscribirme</a>
+        {% endif %}
+        {% if tipo == "inscripciones" %}
+            <a href="{% url 'cancelar_inscripcion' actividad.id item.id %}" class="btn btn-danger btn-sm">
+                Cancelar Inscripción
+            </a>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="2" class="text-center text-muted py-4"> No se encontraron resultados.</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
-<ul>
-
 {% endblock %}

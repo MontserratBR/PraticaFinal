@@ -4,12 +4,9 @@
 <div class="container mt-4">
     <p class="h2 text-center">{{ titulo }}</p>
     <hr>
-
     <form method="post" class="form-group">
         {% csrf_token %}
-
         {% if form %}
-            <!-- Renderizado de campos si existe un formulario de Django -->
             {% for field in form %}
                 <div class="mb-3">
                     <label class="form-label fw-bold" for="{{ field.id_for_label }}">
@@ -17,17 +14,19 @@
                     </label>
                     {{ field }}
                     {% if field.errors %}
-                        <div class="text-danger small">{{ field.errors }}</div>
+                         {% for error in field.errors %}
+                            <div class="text-danger small" style="list-style: none;">
+                                <i class="bi bi-exclamation-circle"></i> {{ error }}
+                            </div>
+                        {% endfor %}    
                     {% endif %}
                 </div>
             {% endfor %}
         {% else %}
-            <!-- Mensaje de confirmación si es una acción directa (como inscribirse) -->
             <div class="alert alert-info">
                 ¿Estás seguro de que deseas realizar esta acción para <strong>{{ actividad.nombre }}</strong>?
             </div>
         {% endif %}
-
         <div class="d-flex justify-content-between">
             <button type="submit" class="btn btn-success">
                 {% if "Eliminar" in titulo or "Cancelar" in titulo %} Confirmar Baja {% else %} Guardar {% endif %}
